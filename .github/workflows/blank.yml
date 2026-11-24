@@ -1,0 +1,45 @@
+name: Windows RDP via Ngrok
+
+on:
+  workflow_dispatch:
+    inputs:
+      access_password:
+        description: 'Κωδικός RDP'
+        required: true
+        default: 'Nick@2026!'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Configure Windows User Password
+        run: |
+          net user runneradmin "${{ github.event.inputs.access_password }}"
+
+      - name: Enable Remote Desktop
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
+
+      - name: Install Ngrok
+        run: |
+          Invoke-WebRequest -Uri https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
+          Expand-Archive ngrok.zip -DestinationPath C:\Windows\System32 -Force
+          ngrok config add-authtoken "${{ secrets.NGROK_AUTHTOKEN }}"
+
+      - name: Start Ngrok Tunnel & Show Info
+        run: |
+          Start-Process ngrok -ArgumentList "tcp 3389" -WindowStyle Hidden
+          Start-Sleep -Seconds 5
+          $ngrokAPI = Invoke-RestMethod -Uri http://localhost:4040/api/tunnels
+          $publicURL = $ngrokAPI.tunnels[0].public_url
+          Write-Host "=========================================="
+          Write-Host "Σύνδεση RDP Address: $publicURL"
+          Write-Host "Αντικατάστησε το tcp:// με το IP στο Remote Desktop"
+          Write-Host "Username: runneradmin"
+          Write-Host "Password: ${{ github.event.inputs.access_password }}"
+          Write-Host "=========================================="
+          Start-Sleep -Seconds 21500
