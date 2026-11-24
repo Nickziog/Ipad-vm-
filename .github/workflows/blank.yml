@@ -32,14 +32,21 @@ jobs:
 
       - name: Start Ngrok Tunnel & Show Info
         run: |
-          Start-Process ngrok -ArgumentList "tcp 3389" -WindowStyle Hidden
-          Start-Sleep -Seconds 5
-          $ngrokAPI = Invoke-RestMethod -Uri http://localhost:4040/api/tunnels
-          $publicURL = $ngrokAPI.tunnels[0].public_url
-          Write-Host "=========================================="
-          Write-Host "Σύνδεση RDP Address: $publicURL"
-          Write-Host "Αντικατάστησε το tcp:// με το IP στο Remote Desktop"
-          Write-Host "Username: runneradmin"
-          Write-Host "Password: ${{ github.event.inputs.access_password }}"
-          Write-Host "=========================================="
-          Start-Sleep -Seconds 21500
+          Start-Process ngrok -ArgumentList "tcp 3389 --log=ngrok.log" -WindowStyle Hidden
+          Start-Sleep -Seconds 8
+          if (Test-Path ngrok.log) {
+            Get-Content ngrok.log
+          }
+          try {
+            $ngrokAPI = Invoke-RestMethod -Uri http://localhost:4040/api/tunnels
+            $publicURL = $ngrokAPI.tunnels[0].public_url
+            Write-Host "=========================================="
+            Write-Host "Σύνδεση RDP Address: $publicURL"
+            Write-Host "Username: runneradmin"
+            Write-Host "Password: ${{ github.event.inputs.access_password }}"
+            Write-Host "=========================================="
+            Start-Sleep -Seconds 21500
+          } catch {
+            Write-Host "Το Ngrok έκλεισε. Δες το log παραπάνω για την αιτία."
+            exit 1
+          }
