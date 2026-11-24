@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       access_password:
-        description: 'Κωδικός RDP'
+        description: 'Kwdikos RDP'
         required: true
         default: 'Nick@2026!'
 
@@ -26,11 +26,11 @@ jobs:
 
       - name: Start Pinggy Tunnel & Show Info
         run: |
-          Start-Process -FilePath "ssh.exe" -ArgumentList "-p 443 -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o ServerAliveInterval=30 -R0:localhost:3389 tcp@a.pinggy.io" -RedirectStandardOutput "pinggy_out.txt" -RedirectStandardError "pinggy_err.txt" -WindowStyle Hidden
+          Start-Process -FilePath "ssh.exe" -ArgumentList "-tt -p 443 -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o ServerAliveInterval=30 -R0:localhost:3389 tcp@a.pinggy.io" -RedirectStandardOutput "pinggy_out.txt" -RedirectStandardError "pinggy_err.txt" -WindowStyle Hidden
           for ($i=1; $i -le 15; $i++) {
             Start-Sleep -Seconds 2
             $all = (Get-Content pinggy_out.txt -ErrorAction SilentlyContinue) + (Get-Content pinggy_err.txt -ErrorAction SilentlyContinue)
-            if ($all -match "a\.pinggy\.link") { break }
+            if ($all -match "pinggy\.link") { break }
           }
           Write-Host "=========================================="
           Get-Content pinggy_out.txt -ErrorAction SilentlyContinue
