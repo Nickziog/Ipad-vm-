@@ -1,10 +1,10 @@
-name: Windows RDP via Pinggy
+name: Windows RDP via Serveo
 
 on:
   workflow_dispatch:
     inputs:
       access_password:
-        description: 'Kwdikos RDP'
+        description: 'Κωδικός RDP'
         required: true
         default: 'Nick@2026!'
 
@@ -24,10 +24,10 @@ jobs:
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
 
-      - name: Start Pinggy Tunnel & Show Info
+      - name: Start Serveo Tunnel & Show Info
         run: |
           Write-Host "=========================================="
           Write-Host "Username: runneradmin"
           Write-Host "Password: ${{ github.event.inputs.access_password }}"
           Write-Host "=========================================="
-          cmd /c "ssh -p 443 -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o ServerAliveInterval=30 -R0:localhost:3389 tcp@a.pinggy.io"
+          ssh -T -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o ServerAliveInterval=30 -R 0:localhost:3389 serveo.net
