@@ -26,10 +26,15 @@ jobs:
 
       - name: Start Pinggy Tunnel & Show Info
         run: |
-          Start-Process -FilePath "ssh.exe" -ArgumentList "-p 443 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -R0:localhost:3389 tcp@a.pinggy.io" -RedirectStandardOutput "pinggy.txt" -WindowStyle Hidden
-          Start-Sleep -Seconds 8
+          Start-Process -FilePath "ssh.exe" -ArgumentList "-p 443 -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o ServerAliveInterval=30 -R0:localhost:3389 tcp@a.pinggy.io" -RedirectStandardOutput "pinggy_out.txt" -RedirectStandardError "pinggy_err.txt" -WindowStyle Hidden
+          for ($i=1; $i -le 15; $i++) {
+            Start-Sleep -Seconds 2
+            $all = (Get-Content pinggy_out.txt -ErrorAction SilentlyContinue) + (Get-Content pinggy_err.txt -ErrorAction SilentlyContinue)
+            if ($all -match "a\.pinggy\.link") { break }
+          }
           Write-Host "=========================================="
-          Get-Content pinggy.txt
+          Get-Content pinggy_out.txt -ErrorAction SilentlyContinue
+          Get-Content pinggy_err.txt -ErrorAction SilentlyContinue
           Write-Host "Username: runneradmin"
           Write-Host "Password: ${{ github.event.inputs.access_password }}"
           Write-Host "=========================================="
