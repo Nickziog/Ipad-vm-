@@ -1,4 +1,4 @@
-name: Windows RDP via Ngrok
+name: Windows RDP via Pinggy
 
 on:
   workflow_dispatch:
@@ -24,29 +24,13 @@ jobs:
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
 
-      - name: Install Ngrok
+      - name: Start Pinggy Tunnel & Show Info
         run: |
-          Invoke-WebRequest -Uri https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
-          Expand-Archive ngrok.zip -DestinationPath C:\Windows\System32 -Force
-          ngrok config add-authtoken "${{ secrets.NGROK_AUTHTOKEN }}"
-
-      - name: Start Ngrok Tunnel & Show Info
-        run: |
-          Start-Process ngrok -ArgumentList "tcp 3389 --log=ngrok.log" -WindowStyle Hidden
+          Start-Process -FilePath "ssh.exe" -ArgumentList "-p 443 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -R0:localhost:3389 tcp@a.pinggy.io" -RedirectStandardOutput "pinggy.txt" -WindowStyle Hidden
           Start-Sleep -Seconds 8
-          if (Test-Path ngrok.log) {
-            Get-Content ngrok.log
-          }
-          try {
-            $ngrokAPI = Invoke-RestMethod -Uri http://localhost:4040/api/tunnels
-            $publicURL = $ngrokAPI.tunnels[0].public_url
-            Write-Host "=========================================="
-            Write-Host "Σύνδεση RDP Address: $publicURL"
-            Write-Host "Username: runneradmin"
-            Write-Host "Password: ${{ github.event.inputs.access_password }}"
-            Write-Host "=========================================="
-            Start-Sleep -Seconds 21500
-          } catch {
-            Write-Host "Το Ngrok έκλεισε. Δες το log παραπάνω για την αιτία."
-            exit 1
-          }
+          Write-Host "=========================================="
+          Get-Content pinggy.txt
+          Write-Host "Username: runneradmin"
+          Write-Host "Password: ${{ github.event.inputs.access_password }}"
+          Write-Host "=========================================="
+          Start-Sleep -Seconds 21500
