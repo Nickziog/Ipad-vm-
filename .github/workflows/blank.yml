@@ -1,4 +1,4 @@
-name: Windows RDP via Serveo
+name: Windows RDP via Cloudflared
 
 on:
   workflow_dispatch:
@@ -24,10 +24,11 @@ jobs:
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
 
-      - name: Start Serveo Tunnel & Show Info
+      - name: Start Cloudflared Tunnel & Show Info
         run: |
+          Invoke-WebRequest -Uri "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe" -OutFile "cloudflared.exe"
           Write-Host "=========================================="
           Write-Host "Username: runneradmin"
           Write-Host "Password: ${{ github.event.inputs.access_password }}"
           Write-Host "=========================================="
-          ssh -T -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o ServerAliveInterval=30 -R 0:localhost:3389 serveo.net
+          .\cloudflared.exe access tcp --hostname rdp.example.com --url localhost:3389
